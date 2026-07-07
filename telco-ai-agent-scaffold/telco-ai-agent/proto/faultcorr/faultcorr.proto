@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package telco.faultcorr.v1;
+
+option go_package = "github.com/telco-ai-agent/proto/faultcorr;faultcorrv1";
+
+import "google/protobuf/timestamp.proto";
+
+service FaultCorrService {
+  rpc GetOpenFaults(GetOpenFaultsRequest) returns (GetOpenFaultsResponse);
+  rpc GetFaultDetail(GetFaultDetailRequest) returns (Fault);
+  rpc SubscribeFaults(SubscribeFaultsRequest) returns (stream Fault);
+}
+
+message GetOpenFaultsRequest {}
+
+message GetOpenFaultsResponse {
+  repeated Fault faults = 1;
+}
+
+message GetFaultDetailRequest {
+  string fault_id = 1;
+}
+
+message SubscribeFaultsRequest {}
+
+enum FaultStatus {
+  FAULT_STATUS_UNSPECIFIED = 0;
+  FAULT_STATUS_OPEN = 1;
+  FAULT_STATUS_INVESTIGATING = 2;
+  FAULT_STATUS_RESOLVED = 3;
+}
+
+message RootCauseCandidate {
+  string node_id = 1;
+  double confidence = 2;
+  string rationale = 3; // human-readable explanation
+}
+
+message Fault {
+  string id = 1;
+  google.protobuf.Timestamp opened_at = 2;
+  google.protobuf.Timestamp closed_at = 3; // unset if open
+  FaultStatus status = 4;
+  repeated string anomaly_correlation_ids = 5;
+  repeated RootCauseCandidate candidates = 6;
+  repeated string affected_node_ids = 7;
+  repeated string affected_edge_ids = 8;
+}

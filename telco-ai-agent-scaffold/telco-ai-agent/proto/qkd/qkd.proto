@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package telco.qkd.v1;
+
+option go_package = "github.com/telco-ai-agent/proto/qkd;qkdv1";
+
+import "google/protobuf/timestamp.proto";
+
+service QKDHealthService {
+  rpc GetLinkHealth(GetLinkHealthRequest) returns (LinkHealth);
+  rpc StreamLinkHealth(StreamLinkHealthRequest) returns (stream LinkHealth);
+  rpc GetKeyRateHistory(GetKeyRateHistoryRequest) returns (GetKeyRateHistoryResponse);
+}
+
+message GetLinkHealthRequest {
+  string link_id = 1;
+}
+
+message StreamLinkHealthRequest {
+  repeated string link_ids = 1; // empty = all QKD links
+}
+
+message GetKeyRateHistoryRequest {
+  string link_id = 1;
+  google.protobuf.Timestamp start = 2;
+  google.protobuf.Timestamp end = 3;
+}
+
+message GetKeyRateHistoryResponse {
+  repeated LinkHealth samples = 1;
+}
+
+message LinkHealth {
+  string link_id = 1;
+  google.protobuf.Timestamp time = 2;
+  double qber = 3;              // quantum bit error rate
+  double sifted_key_rate_bps = 4;
+  double final_key_rate_bps = 5;
+  double sifting_ratio = 6;
+  double channel_drift = 7;     // normalized drift metric
+  bool degraded = 8;
+}

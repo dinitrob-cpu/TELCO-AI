@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+  nats:
+    image: nats:2.10-alpine
+    command: ["-js", "-m", "8222"]
+    ports:
+      - "4222:4222"   # client
+      - "8222:8222"   # monitoring
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_USER: telco
+      POSTGRES_PASSWORD: telco
+      POSTGRES_DB: telco
+    ports:
+      - "5432:5432"
+    volumes:
+      - ../migrations:/docker-entrypoint-initdb.d
+
+  orchestrator:
+    build:
+      context: ../../services/orchestrator
+    depends_on: [nats, timescaledb]
+    ports:
+      - "8080:8080"
+    environment:
+      NATS_URL: nats://nats:4222
+      DATABASE_URL: postgres://telco:telco@timescaledb:5432/telco
+
+  topology-agent:
+    build:
+      context: ../../services/topology-agent
+    depends_on: [nats]
+    environment:
+      NATS_URL: nats://nats:4222
+
+  anomaly-agent:
+    build:
+      context: ../../services/anomaly-agent
+    depends_on: [nats]
+    environment:
+      NATS_URL: nats://nats:4222
+
+  faultcorr-agent:
+    build:
+      context: ../../services/faultcorr-agent
+    depends_on: [nats]
+    environment:
+      NATS_URL: nats://nats:4222
+
+  qkd-health-agent:
+    build:
+      context: ../../services/qkd-health-agent
+    depends_on: [nats]
+    environment:
+      NATS_URL: nats://nats:4222
+
+  gn-sim:
+    build:
+      context: ../../gn-sim
+    depends_on: [nats]
+    environment:
+      NATS_URL: nats://nats:4222
+    command: ["--nodes=80", "--archetype=hybrid_qkd", "--tick=1s"]
+
+  frontend:
+    build:
+      context: ../../frontend
+    depends_on: [orchestrator]
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_ORCHESTRATOR_URL: http://localhost:8080

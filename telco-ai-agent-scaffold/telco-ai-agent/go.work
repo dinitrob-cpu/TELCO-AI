@@ -1,0 +1,10 @@
+go 1.23
+
+use (
+	./services/orchestrator
+	./services/topology-agent
+	./services/faultcorr-agent
+	./services/qkd-health-agent
+	./gn-engine
+	./gn-sim
+)

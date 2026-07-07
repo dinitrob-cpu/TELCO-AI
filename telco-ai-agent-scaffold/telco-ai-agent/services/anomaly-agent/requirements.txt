@@ -1,0 +1,6 @@
+grpcio==1.66.2
+grpcio-tools==1.66.2
+nats-py==2.9.0
+torch==2.4.1
+torch-geometric==2.6.1
+numpy==2.1.1

@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package telco.anomaly.v1;
+
+option go_package = "github.com/telco-ai-agent/proto/anomaly;anomalyv1";
+
+import "google/protobuf/timestamp.proto";
+
+// AnomalyService exposes GN-engine-scored anomaly detection over the
+// live topology + telemetry window. Implemented by the Python
+// Anomaly SubAgent; consumed via gRPC by Go services.
+service AnomalyService {
+  rpc ScoreWindow(ScoreWindowRequest) returns (ScoreWindowResponse);
+  rpc GetActiveAnomalies(GetActiveAnomaliesRequest) returns (GetActiveAnomaliesResponse);
+  rpc StreamAnomalies(StreamAnomaliesRequest) returns (stream AnomalyEvent);
+}
+
+message ScoreWindowRequest {
+  google.protobuf.Timestamp window_start = 1;
+  google.protobuf.Timestamp window_end = 2;
+  repeated string node_ids = 3; // empty = whole graph
+}
+
+message ScoreWindowResponse {
+  repeated AnomalyEvent events = 1;
+}
+
+message GetActiveAnomaliesRequest {
+  double min_severity = 1;
+}
+
+message GetActiveAnomaliesResponse {
+  repeated AnomalyEvent events = 1;
+}
+
+message StreamAnomaliesRequest {
+  double min_severity = 1;
+}
+
+message FeatureAttribution {
+  string feature_name = 1;
+  double weight = 2;
+}
+
+message AnomalyEvent {
+  string correlation_id = 1;
+  google.protobuf.Timestamp time = 2;
+  repeated string node_ids = 3;
+  repeated string edge_ids = 4;
+  double score = 5;          // 0..1, GNN output
+  double severity = 6;       // 0..1, post-calibration
+  repeated FeatureAttribution attribution = 7;
+  string source = 8;         // e.g. "gnn", "qkd-health", "rule:threshold"
+}

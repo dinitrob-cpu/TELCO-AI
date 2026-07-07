@@ -1,0 +1,131 @@
+# ─────────────────────────────────────────────────────────────
+# Go
+# ─────────────────────────────────────────────────────────────
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+vendor/
+# Go workspace files (keep go.work checked in; ignore local overrides)
+go.work.sum
+
+# Build output
+dist/
+build/
+_output/
+
+# ─────────────────────────────────────────────────────────────
+# Python (Anomaly SubAgent, GN engine Python bindings/tooling)
+# ─────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtualenvs
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Type checkers / linters
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ─────────────────────────────────────────────────────────────
+# Node / Next.js frontend
+# ─────────────────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+.nuxt/
+.cache/
+.vite/
+.turbo/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# ─────────────────────────────────────────────────────────────
+# Environment / secrets
+# ─────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+.env.local
+.env.*.local
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+
+# ─────────────────────────────────────────────────────────────
+# Editor / IDE / OS
+# ─────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─────────────────────────────────────────────────────────────
+# Data / DB / model artifacts
+# ─────────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+data/
+artifacts/
+models/
+*.ckpt
+*.pt
+*.pth
+*.onnx
+
+# ─────────────────────────────────────────────────────────────
+# Logs
+# ─────────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ─────────────────────────────────────────────────────────────
+# Local scaffold zip (don't commit the archive of the repo itself)
+# ─────────────────────────────────────────────────────────────
+telco-ai-agent-scaffold.zip
