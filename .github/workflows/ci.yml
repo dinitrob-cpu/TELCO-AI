@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROJECT_DIR: telco-ai-agent-scaffold/telco-ai-agent
+
+jobs:
+  # ───────────────────────────────────────────────────────────
+  # Go: vet + build the workspace (orchestrator, topology-agent,
+  # faultcorr-agent, qkd-health-agent, gn-engine, gn-sim)
+  # ───────────────────────────────────────────────────────────
+  go:
+    name: Go vet & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.PROJECT_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: |
+            ${{ env.PROJECT_DIR }}/services/orchestrator/go.sum
+            ${{ env.PROJECT_DIR }}/services/topology-agent/go.sum
+            ${{ env.PROJECT_DIR }}/services/faultcorr-agent/go.sum
+            ${{ env.PROJECT_DIR }}/services/qkd-health-agent/go.sum
+            ${{ env.PROJECT_DIR }}/gn-engine/go.sum
+            ${{ env.PROJECT_DIR }}/gn-sim/go.sum
+            ${{ env.PROJECT_DIR }}/go.work.sum
+
+      - name: Download deps
+        run: go mod download all
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go build
+        run: go build ./...
+
+  # ───────────────────────────────────────────────────────────
+  # Frontend: install + next build (Next.js 15 / React 18)
+  # ───────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.PROJECT_DIR }}/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ${{ env.PROJECT_DIR }}/frontend/package-lock.json
+
+      # No package-lock.json in the scaffold yet — fall back to plain install.
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+  # ───────────────────────────────────────────────────────────
+  # Python (Anomaly SubAgent): syntax check + import smoke test.
+  # Kept intentionally light (no torch install) for CI speed;
+  # upgrade to a full install + test job once tests exist.
+  # ───────────────────────────────────────────────────────────
+  python:
+    name: Python syntax check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.PROJECT_DIR }}/services/anomaly-agent
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile-check all .py files
+        run: python -m compileall -q .
+
+      # Lightweight import check on the pure-Python stdlib bits only.
+      # torch/grpcio are heavy; skip until real tests are added.
+      - name: Smoke import (stdlib only)
+        run: |
+          python - <<'PY'
+          import ast, sys
+          bad = []
+          for f in ["main.py", "gn_engine/model.py"]:
+              try:
+                  ast.parse(open(f, encoding="utf-8").read(), filename=f)
+              except SyntaxError as e:
+                  bad.append(f"{f}: {e}")
+          if bad:
+              sys.exit("Syntax errors:\n" + "\n".join(bad))
+          print("OK: parsed", *["main.py", "gn_engine/model.py"])
+          PY
